@@ -1,17 +1,27 @@
 import pygame
+import random
 
 
 class Alien(pygame.sprite.Sprite):
     # This class represents a car. It derives from the "Sprite" class in Pygame.
 
     def __init__(self):
-        # Call the parent class (Sprite) constructor
         super().__init__()
         self.image = pygame.image.load(
             'sprites/Pixel SHMUP Free/enemy_1_1.png').convert_alpha()
-
-        # Fetch the rectangle object that has the dimensions of the image.
         self.rect = self.image.get_rect()
+        self.has_shot = False
 
-        # self.image = pygame.transform.scale(
-        #     self.image, (screen_width/20, screen_height/20))
+
+class EnemyProjectile(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        self.image = pygame.image.load(
+            'sprites/SHMUP-Asset-Pack-1/PNG/Projectiles/Flameshot/Flameshot-1.png').convert_alpha()
+        # self.image = pygame.transform.rotate(self.image, 180)
+        self.speed = 6
+        self.rect = self.image.get_rect()
+        print('made bullet')
+
+    def update(self):
+        self.rect.y += self.speed
