@@ -11,14 +11,15 @@ GAME_FONT = pygame.font.Font(pygame.font.get_default_font(), size=50)
 
 USERNAME = 'wnsnk'
 score = 0
-
+lifes = 5
 SCREEN_WIDTH = 720
-SCREEN_HEIGHT = 1280
+SCREEN_HEIGHT = 1080
 MOVEMENT_SPEED = 10
 player_shot = False
 player_reload = 0
 enemy_shot = False
 enemy_reload = 0
+enemy_move_speed = 100
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption('Space Invaders')
 clock = pygame.time.Clock()
@@ -58,7 +59,7 @@ def shoot_enemy(enemy_x, enemy_y):
 # player
 player = SpaceShip()
 player.rect.x = SCREEN_WIDTH / 2
-player.rect.y = (SCREEN_HEIGHT - (player.image.height * 2))
+player.rect.y = (SCREEN_HEIGHT - (player.image.height * 3))
 all_sprites_list.add(player)
 
 # enemies
@@ -92,6 +93,7 @@ def check_player_wall_collision():
 
 
 def check_if_player_bullet_hit_enemy(enemy_list):
+    global enemy_move_speed, score
     for enemy in enemy_list:
         for bullet in player_bullet_list:
             if enemy.rect.left < bullet.rect.x < enemy.rect.right and enemy.rect.top < bullet.rect.y < enemy.rect.bottom:
@@ -99,11 +101,12 @@ def check_if_player_bullet_hit_enemy(enemy_list):
                 enemies_list.remove(enemy)
                 all_sprites_list.remove(bullet)
                 all_sprites_list.remove(enemy)
+                enemy_move_speed -= 2
+                score += 5
 
 
 def check_if_player_bullet_out_of_sceen():
     for bullet in player_bullet_list:
-        print(bullet.rect.y)
         if bullet.rect.y < 0:
             player_bullet_list.remove(bullet)
             all_sprites_list.remove(bullet)
@@ -116,11 +119,25 @@ def check_if_enemy_bullet_out_of_screen():
             all_sprites_list.remove(bullet)
 
 
+def check_if_player_got_hit():
+    global lifes
+    for bullet in enemy_bullet_list:
+        if player.rect.left < bullet.rect.x < player.rect.right and player.rect.top < bullet.rect.y < player.rect.bottom:
+            lifes -= 1
+            print(lifes)
+            enemy_bullet_list.remove(bullet)
+            all_sprites_list.remove(bullet)
+            if lifes <= 0:
+                print('game over')
+                print(score)
+
+
 def check_collisions():
     check_player_wall_collision()
     check_if_player_bullet_hit_enemy(enemies_list)
     check_if_player_bullet_out_of_sceen()
     check_if_enemy_bullet_out_of_screen()
+    check_if_player_got_hit()
 
 
 player_bullet_list = []
@@ -138,7 +155,8 @@ while running:
     all_sprites_list.update()
     all_sprites_list.draw(screen)
     delta_time = clock.tick(60) / 1000
-    if count == 100:
+
+    if count >= enemy_move_speed:
         if enemy_go_down:
             for enemy in enemies_list:
                 enemy.rect.y += 15
