@@ -69,16 +69,23 @@ num_aliens_x = (SCREEN_WIDTH - (empty_space_x * 2)) / \
 num_aliens_x += 1
 alien_x = empty_space_x
 alien_y = 20
-for _ in range(int(num_aliens_x)):
-    enemy = Alien()
-    enemy.rect.x = alien_x
-    alien_x += (enemy.image.width + empty_space_x)
-    enemy.rect.y = alien_y
-    all_sprites_list.add(enemy)
-    enemies_list.append(enemy)
+for row in range(5):
+    for column in range(int(num_aliens_x)):
+        enemy = Alien()
+        enemy.rect.x = alien_x
+        alien_x += (enemy.image.width + empty_space_x)
+        enemy.rect.y = alien_y
+        all_sprites_list.add(enemy)
+        enemies_list.append(enemy)
+    alien_y += 50
+    alien_x = empty_space_x
 
 player_bullet_list = []
 
+count = 0
+enemy_steps_taken = 0
+enemy_go_to_left = False
+enemy_go_down = False
 running = True
 while running:
     for event in pygame.event.get():
@@ -88,6 +95,28 @@ while running:
     all_sprites_list.update()
     all_sprites_list.draw(screen)
     delta_time = clock.tick(60) / 1000
+    print(count)
+    if count == 100:
+        if enemy_go_down:
+            for enemy in enemies_list:
+                enemy.rect.y += 30
+            enemy_go_down = False
+        elif not enemy_go_to_left:
+            for enemy in enemies_list:
+                enemy.rect.x += 10
+            enemy_steps_taken += 1
+            if enemy_steps_taken >= 2:
+                enemy_go_to_left = True
+                enemy_go_down = True
+        elif enemy_go_to_left:
+            for enemy in enemies_list:
+                enemy.rect.x -= 10
+            enemy_steps_taken -= 1
+            if enemy_steps_taken <= 0:
+                enemy_go_to_left = False
+                enemy_go_down = True
+
+        count = 0
 
     keys = pygame.key.get_pressed()
     if keys[pygame.K_a] or keys[pygame.K_LEFT]:
@@ -109,11 +138,12 @@ while running:
         enemy_reload -= 1
         if enemy_reload == 0:
             enemy_shot = False
-    random_num = random.randint(1, 5)
+    random_num = random.randint(1, 10)
     if random_num == 1:
         random_enemy = random.choice(enemies_list)
         shoot_enemy(random_enemy.rect.x, random_enemy.rect.y)
     pygame.display.update()
+    count += 1
 
 
 pygame.quit()
