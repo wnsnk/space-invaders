@@ -81,6 +81,17 @@ for row in range(5):
 
 # collision detection
 
+
+def check_player_wall_collision():
+    print(player.rect.right)
+    print(player.rect.width)
+    print(screen.width)
+    if player.rect.right > (screen.width - (player.rect.width / 2)):
+        player.rect.x -= MOVEMENT_SPEED
+    if player.rect.left < 0:
+        player.rect.x += MOVEMENT_SPEED
+
+
 player_bullet_list = []
 
 count = 0
@@ -96,7 +107,6 @@ while running:
     all_sprites_list.update()
     all_sprites_list.draw(screen)
     delta_time = clock.tick(60) / 1000
-    print(count)
     if count == 100:
         if enemy_go_down:
             for enemy in enemies_list:
@@ -143,6 +153,9 @@ while running:
     if random_num == 1:
         random_enemy = random.choice(enemies_list)
         shoot_enemy(random_enemy.rect.x, random_enemy.rect.y)
+
+    # collisions
+    check_player_wall_collision()
     pygame.display.update()
     count += 1
 
