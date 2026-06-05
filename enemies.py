@@ -2,9 +2,7 @@ import pygame
 import random
 
 
-class Alien(pygame.sprite.Sprite):
-    # This class represents a car. It derives from the "Sprite" class in Pygame.
-
+class Enemy(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
         self.image = pygame.image.load(

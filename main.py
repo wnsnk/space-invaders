@@ -1,7 +1,8 @@
 import pygame
 import random
-from enemies import Alien, EnemyProjectile
+from enemies import Enemy, EnemyProjectile
 from spaceship import SpaceShip, PLayerProjectile
+from explosion import Explosion
 pygame.init()
 pygame.font.init()
 
@@ -11,12 +12,14 @@ GAME_FONT = pygame.font.Font(pygame.font.get_default_font(), size=50)
 
 USERNAME = 'wnsnk'
 score = 0
+kills = 0
 lifes = 5
 SCREEN_WIDTH = 720
 SCREEN_HEIGHT = 1080
 MOVEMENT_SPEED = 10
 player_shot = False
 player_reload = 0
+player_reload_speed = 40
 enemy_shot = False
 enemy_reload = 0
 enemy_move_speed = 100
@@ -34,7 +37,7 @@ def shoot(player_x, player_y):
     global player_reload, player_shot
     if not player_shot:
         player_shot = True
-        player_reload = 40
+        player_reload = player_reload_speed
         bullet = PLayerProjectile()
         bullet.rect.x = (player.rect.x + (player.rect.width / 2)) + 7
         bullet.rect.y = player_y + 10
@@ -64,23 +67,31 @@ all_sprites_list.add(player)
 
 # enemies
 enemies_list = []
-width_enemy = Alien().image.width
-empty_space_x = SCREEN_WIDTH / width_enemy
-num_aliens_x = (SCREEN_WIDTH - (empty_space_x * 2)) / \
-    (width_enemy + empty_space_x)
-num_aliens_x += 1
-alien_x = empty_space_x
-alien_y = 20
-for row in range(5):
-    for column in range(int(num_aliens_x)):
-        enemy = Alien()
-        enemy.rect.x = alien_x
-        alien_x += (enemy.image.width + empty_space_x)
-        enemy.rect.y = alien_y
-        all_sprites_list.add(enemy)
-        enemies_list.append(enemy)
-    alien_y += 50
+
+enemy = Enemy()
+
+
+def create_enemies():
+    width_enemy = Enemy().image.width
+    empty_space_x = SCREEN_WIDTH / width_enemy
+    num_aliens_x = (SCREEN_WIDTH - (empty_space_x * 2)) / \
+        (width_enemy + empty_space_x)
+    num_aliens_x += 1
     alien_x = empty_space_x
+    alien_y = 20
+    for row in range(5):
+        for column in range(int(num_aliens_x)):
+            enemy = Enemy()
+            enemy.rect.x = alien_x
+            alien_x += (enemy.image.width + empty_space_x)
+            enemy.rect.y = alien_y
+            all_sprites_list.add(enemy)
+            enemies_list.append(enemy)
+        alien_y += 50
+        alien_x = empty_space_x
+
+
+create_enemies()
 
 # collision detection
 
@@ -97,11 +108,14 @@ def check_if_player_bullet_hit_enemy(enemy_list):
     for enemy in enemy_list:
         for bullet in player_bullet_list:
             if enemy.rect.left < bullet.rect.x < enemy.rect.right and enemy.rect.top < bullet.rect.y < enemy.rect.bottom:
+                explosion = Explosion(bullet.rect.x, bullet.rect.y)
+                all_sprites_list.add(explosion)
                 player_bullet_list.remove(bullet)
                 enemies_list.remove(enemy)
                 all_sprites_list.remove(bullet)
                 all_sprites_list.remove(enemy)
                 enemy_move_speed -= 2
+
                 score += 5
 
 
@@ -125,11 +139,16 @@ def check_if_player_got_hit():
         if player.rect.left < bullet.rect.x < player.rect.right and player.rect.top < bullet.rect.y < player.rect.bottom:
             lifes -= 1
             print(lifes)
+            explosion = Explosion(bullet.rect.x, bullet.rect.y)
+
+            all_sprites_list.add(explosion)
+            all_sprites_list.update()
             enemy_bullet_list.remove(bullet)
             all_sprites_list.remove(bullet)
-            if lifes <= 0:
-                print('game over')
-                print(score)
+
+            # if lifes <= 0:
+            #     print('game over')
+            #     print(score)
 
 
 def check_collisions():
@@ -198,12 +217,13 @@ while running:
         enemy_reload -= 1
         if enemy_reload == 0:
             enemy_shot = False
-    random_num = random.randint(1, 10)
-    if random_num == 1:
-        random_enemy = random.choice(enemies_list)
-        shoot_enemy(random_enemy.rect.x, random_enemy.rect.y)
+    if len(enemies_list) > 0:
+        random_num = random.randint(1, 10)
+        if random_num == 1:
+            random_enemy = random.choice(enemies_list)
+            shoot_enemy(random_enemy.rect.x, random_enemy.rect.y)
 
-    # collisions
+        # collisions
     check_collisions()
     pygame.display.update()
     count += 1
