@@ -26,12 +26,14 @@ delta_time = clock.tick(60) / 1000
 
 all_sprites_list = pygame.sprite.Group()
 
+# shooting
+
 
 def shoot(player_x, player_y):
     global player_reload, player_shot
     if not player_shot:
         player_shot = True
-        player_reload = 5
+        player_reload = 40
         bullet = PLayerProjectile()
         bullet.rect.x = (player.rect.x + (player.rect.width / 2)) + 7
         bullet.rect.y = player_y + 10
@@ -43,9 +45,6 @@ def shoot_enemy(enemy_x, enemy_y):
     global enemy_shot
 
     if not enemy_shot:
-        # random_num = random.randint(1, 1000)
-        # print(random_num)
-
         enemy_shot == True
         enemy_bullet = EnemyProjectile()
         enemy_bullet.rect.x = enemy_x + (enemy.rect.width / 2)
@@ -80,6 +79,8 @@ for row in range(5):
     alien_y += 50
     alien_x = empty_space_x
 
+# collision detection
+
 player_bullet_list = []
 
 count = 0
@@ -99,18 +100,18 @@ while running:
     if count == 100:
         if enemy_go_down:
             for enemy in enemies_list:
-                enemy.rect.y += 30
+                enemy.rect.y += 15
             enemy_go_down = False
         elif not enemy_go_to_left:
             for enemy in enemies_list:
-                enemy.rect.x += 10
+                enemy.rect.x += 5
             enemy_steps_taken += 1
-            if enemy_steps_taken >= 2:
+            if enemy_steps_taken >= 4:
                 enemy_go_to_left = True
                 enemy_go_down = True
         elif enemy_go_to_left:
             for enemy in enemies_list:
-                enemy.rect.x -= 10
+                enemy.rect.x -= 5
             enemy_steps_taken -= 1
             if enemy_steps_taken <= 0:
                 enemy_go_to_left = False
@@ -123,10 +124,10 @@ while running:
         player.rect.x -= (MOVEMENT_SPEED)
     if keys[pygame.K_d] or keys[pygame.K_RIGHT]:
         player.rect.x += (MOVEMENT_SPEED)
-    if keys[pygame.K_w] or keys[pygame.K_UP]:
-        player.rect.y -= (MOVEMENT_SPEED)
-    if keys[pygame.K_s] or keys[pygame.K_DOWN]:
-        player.rect.y += (MOVEMENT_SPEED)
+    # if keys[pygame.K_w] or keys[pygame.K_UP]:
+    #     player.rect.y -= (MOVEMENT_SPEED)
+    # if keys[pygame.K_s] or keys[pygame.K_DOWN]:
+    #     player.rect.y += (MOVEMENT_SPEED)
     if keys[pygame.K_SPACE]:
         bullet = shoot(player_x=player.rect.x, player_y=player.rect.y)
 
