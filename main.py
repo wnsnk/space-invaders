@@ -38,6 +38,7 @@ def shoot(player_x, player_y):
         bullet.rect.x = (player.rect.x + (player.rect.width / 2)) + 7
         bullet.rect.y = player_y + 10
         all_sprites_list.add(bullet)
+        player_bullet_list.append(bullet)
         return bullet
 
 
@@ -83,13 +84,25 @@ for row in range(5):
 
 
 def check_player_wall_collision():
-    print(player.rect.right)
-    print(player.rect.width)
-    print(screen.width)
     if player.rect.right > (screen.width - (player.rect.width / 2)):
         player.rect.x -= MOVEMENT_SPEED
     if player.rect.left < 0:
         player.rect.x += MOVEMENT_SPEED
+
+
+def check_if_player_bullet_hit_enemy(enemy_list):
+    for enemy in enemy_list:
+        for bullet in player_bullet_list:
+            if enemy.rect.left < bullet.rect.x < enemy.rect.right and enemy.rect.top < bullet.rect.y < enemy.rect.bottom:
+                print('hit enemy')
+                player_bullet_list.remove(bullet)
+                all_sprites_list.remove(bullet)
+                all_sprites_list.remove(enemy)
+
+
+def check_collisions():
+    check_player_wall_collision()
+    check_if_player_bullet_hit_enemy(enemies_list)
 
 
 player_bullet_list = []
@@ -155,7 +168,7 @@ while running:
         shoot_enemy(random_enemy.rect.x, random_enemy.rect.y)
 
     # collisions
-    check_player_wall_collision()
+    check_collisions()
     pygame.display.update()
     count += 1
 
