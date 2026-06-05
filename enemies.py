@@ -21,7 +21,6 @@ class EnemyProjectile(pygame.sprite.Sprite):
         # self.image = pygame.transform.rotate(self.image, 180)
         self.speed = 6
         self.rect = self.image.get_rect()
-        print('made bullet')
 
     def update(self):
         self.rect.y += self.speed

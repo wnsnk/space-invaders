@@ -51,6 +51,7 @@ def shoot_enemy(enemy_x, enemy_y):
         enemy_bullet.rect.x = enemy_x + (enemy.rect.width / 2)
         enemy_bullet.rect.y = enemy_y + 10
         all_sprites_list.add(enemy_bullet)
+        enemy_bullet_list.append(enemy_bullet)
         return enemy_bullet
 
 
@@ -94,19 +95,36 @@ def check_if_player_bullet_hit_enemy(enemy_list):
     for enemy in enemy_list:
         for bullet in player_bullet_list:
             if enemy.rect.left < bullet.rect.x < enemy.rect.right and enemy.rect.top < bullet.rect.y < enemy.rect.bottom:
-                print('hit enemy')
                 player_bullet_list.remove(bullet)
+                enemies_list.remove(enemy)
                 all_sprites_list.remove(bullet)
                 all_sprites_list.remove(enemy)
+
+
+def check_if_player_bullet_out_of_sceen():
+    for bullet in player_bullet_list:
+        print(bullet.rect.y)
+        if bullet.rect.y < 0:
+            player_bullet_list.remove(bullet)
+            all_sprites_list.remove(bullet)
+
+
+def check_if_enemy_bullet_out_of_screen():
+    for bullet in enemy_bullet_list:
+        if bullet.rect.y > screen.height:
+            enemy_bullet_list.remove(bullet)
+            all_sprites_list.remove(bullet)
 
 
 def check_collisions():
     check_player_wall_collision()
     check_if_player_bullet_hit_enemy(enemies_list)
+    check_if_player_bullet_out_of_sceen()
+    check_if_enemy_bullet_out_of_screen()
 
 
 player_bullet_list = []
-
+enemy_bullet_list = []
 count = 0
 enemy_steps_taken = 0
 enemy_go_to_left = False
