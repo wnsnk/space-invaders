@@ -6,14 +6,14 @@ from explosion import Explosion
 pygame.init()
 pygame.font.init()
 
-print(pygame.font.get_init())
+pygame.font.get_init()
 
 GAME_FONT = pygame.font.Font(pygame.font.get_default_font(), size=50)
 
 USERNAME = 'wnsnk'
 score = 0
 kills = 0
-lifes = 5
+lives = 5
 SCREEN_WIDTH = 720
 SCREEN_HEIGHT = 1080
 MOVEMENT_SPEED = 10
@@ -134,11 +134,11 @@ def check_if_enemy_bullet_out_of_screen():
 
 
 def check_if_player_got_hit():
-    global lifes
+    global lives
     for bullet in enemy_bullet_list:
         if player.rect.left < bullet.rect.x < player.rect.right and player.rect.top < bullet.rect.y < player.rect.bottom:
-            lifes -= 1
-            print(lifes)
+            lives -= 1
+            print(lives)
             explosion = Explosion(bullet.rect.x, bullet.rect.y)
 
             all_sprites_list.add(explosion)
@@ -146,9 +146,14 @@ def check_if_player_got_hit():
             enemy_bullet_list.remove(bullet)
             all_sprites_list.remove(bullet)
 
-            # if lifes <= 0:
-            #     print('game over')
-            #     print(score)
+            if lives <= 0:
+                # TODO FIX
+                game_over_text = f'Game Over\nScore: {score}'
+                game_over_render = GAME_FONT.render(
+                    game_over_text, True, 'white')
+                text_width, text_height = GAME_FONT.size(game_over_text)
+                screen.blit(game_over_render, (screen.width / 2,
+                            (screen.height / 2) - text_height))
 
 
 def check_collisions():
@@ -223,7 +228,17 @@ while running:
             random_enemy = random.choice(enemies_list)
             shoot_enemy(random_enemy.rect.x, random_enemy.rect.y)
 
-        # collisions
+    scoreboard_text = f'Score: {score}'
+    scoreboard = GAME_FONT.render(scoreboard_text, True, 'white')
+    score_text_width, score_text_height = GAME_FONT.size(scoreboard_text)
+    screen.blit(scoreboard, (0, (SCREEN_HEIGHT - score_text_height)))
+    lives_text = f'lives: {lives}'
+    lives_render = GAME_FONT.render(lives_text, True, 'white')
+    lives_text_width, lives_text_height = GAME_FONT.size(lives_text)
+    screen.blit(lives_render, ((screen.width - (lives_text_width + 10),
+                (SCREEN_HEIGHT - lives_text_height))))
+
+    # collisions
     check_collisions()
     pygame.display.update()
     count += 1
