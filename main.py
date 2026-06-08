@@ -3,6 +3,8 @@ import random
 from enemies import Enemy, EnemyProjectile
 from spaceship import SpaceShip, PLayerProjectile
 from explosion import Explosion
+import csv
+from operator import itemgetter
 pygame.init()
 pygame.font.init()
 
@@ -16,6 +18,7 @@ kills = 0
 lives = 5
 SCREEN_WIDTH = 720
 SCREEN_HEIGHT = 1080
+game_state = 'PLAYING'
 MOVEMENT_SPEED = 10
 player_shot = False
 player_reload = 0
@@ -101,6 +104,10 @@ def check_player_wall_collision():
         player.rect.x -= MOVEMENT_SPEED
     if player.rect.left < 0:
         player.rect.x += MOVEMENT_SPEED
+    if player.rect.top < (screen.height / 2) + (screen.height / 6):
+        player.rect.y += MOVEMENT_SPEED
+    if player.rect.y > screen.height - (player.rect.height * 2):
+        player.rect.y -= MOVEMENT_SPEED
 
 
 def check_if_player_bullet_hit_enemy(enemy_list):
@@ -134,11 +141,10 @@ def check_if_enemy_bullet_out_of_screen():
 
 
 def check_if_player_got_hit():
-    global lives
+    global lives, game_state
     for bullet in enemy_bullet_list:
         if player.rect.left < bullet.rect.x < player.rect.right and player.rect.top < bullet.rect.y < player.rect.bottom:
             lives -= 1
-            print(lives)
             explosion = Explosion(bullet.rect.x, bullet.rect.y)
 
             all_sprites_list.add(explosion)
@@ -146,14 +152,12 @@ def check_if_player_got_hit():
             enemy_bullet_list.remove(bullet)
             all_sprites_list.remove(bullet)
 
-            if lives <= 0:
-                # TODO FIX
-                game_over_text = f'Game Over\nScore: {score}'
-                game_over_render = GAME_FONT.render(
-                    game_over_text, True, 'white')
-                text_width, text_height = GAME_FONT.size(game_over_text)
-                screen.blit(game_over_render, (screen.width / 2,
-                            (screen.height / 2) - text_height))
+
+def check_if_enemy_out_out_of_screen():
+    global game_state
+    for enemy in enemies_list:
+        if enemy.rect.y > screen.height + 20:
+            game_state = 'GAME OVER'
 
 
 def check_collisions():
@@ -162,6 +166,44 @@ def check_collisions():
     check_if_player_bullet_out_of_sceen()
     check_if_enemy_bullet_out_of_screen()
     check_if_player_got_hit()
+    check_if_enemy_out_out_of_screen()
+
+
+def game_over():
+    global score
+    screen.fill('black')
+    try:
+        with open('HIGHSCORES.csv', 'r') as highscores_csv:
+            highscores = csv.DictReader(highscores_csv)
+            highscores = list(highscores)
+            for hs in highscores:
+                hs['high_score'] = int(hs['high_score'])
+    except FileNotFoundError:
+        with open('HIGHSCORES.csv', 'a') as highscores_csv:
+            fields = ['name', 'high_score']
+            new_row = {'name': USERNAME, 'high_score': score}
+            writer = csv.DictWriter(highscores_csv, fieldnames=fields)
+            writer.writeheader()
+            writer.writerow(new_row)
+    try:
+        if score > highscores[0]['high_score']:
+            with open('HIGHSCORES.csv', 'a') as highscores_csv:
+
+                new_row = {'name': USERNAME, 'high_score': score}
+                writer = csv.DictWriter(highscores_csv, fieldnames=fields)
+                writer.writerow(new_row)
+                highscores.append(new_row)
+    except UnboundLocalError:
+        new_row = {'name': USERNAME, 'high_score': score}
+        highscores = []
+        highscores.append(new_row)
+    highscores.sort(key=itemgetter('high_score'), reverse=True)
+
+    game_over_text = f'GAME OVER\nName  Highscore   \n{highscores[0]['name']}   {highscores[0]['high_score']}\n\nYour score: {score}'
+    render_game_over_text = GAME_FONT.render(game_over_text, True, 'white')
+    text_width, text_height = GAME_FONT.size(game_over_text)
+    screen.blit(render_game_over_text, (SCREEN_WIDTH / 4,
+                SCREEN_HEIGHT / 2 - text_height * 2))
 
 
 player_bullet_list = []
@@ -175,73 +217,75 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-    screen.fill('black')
-    all_sprites_list.update()
-    all_sprites_list.draw(screen)
-    delta_time = clock.tick(60) / 1000
+    if game_state == 'PLAYING':
+        screen.fill('black')
+        all_sprites_list.update()
+        all_sprites_list.draw(screen)
+        delta_time = clock.tick(60) / 1000
 
-    if count >= enemy_move_speed:
-        if enemy_go_down:
-            for enemy in enemies_list:
-                enemy.rect.y += 15
-            enemy_go_down = False
-        elif not enemy_go_to_left:
-            for enemy in enemies_list:
-                enemy.rect.x += 5
-            enemy_steps_taken += 1
-            if enemy_steps_taken >= 4:
-                enemy_go_to_left = True
-                enemy_go_down = True
-        elif enemy_go_to_left:
-            for enemy in enemies_list:
-                enemy.rect.x -= 5
-            enemy_steps_taken -= 1
-            if enemy_steps_taken <= 0:
-                enemy_go_to_left = False
-                enemy_go_down = True
+        if count >= enemy_move_speed:
+            if enemy_go_down:
+                for enemy in enemies_list:
+                    enemy.rect.y += 15
+                enemy_go_down = False
+            elif not enemy_go_to_left:
+                for enemy in enemies_list:
+                    enemy.rect.x += 5
+                enemy_steps_taken += 1
+                if enemy_steps_taken >= 4:
+                    enemy_go_to_left = True
+                    enemy_go_down = True
+            elif enemy_go_to_left:
+                for enemy in enemies_list:
+                    enemy.rect.x -= 5
+                enemy_steps_taken -= 1
+                if enemy_steps_taken <= 0:
+                    enemy_go_to_left = False
+                    enemy_go_down = True
 
-        count = 0
+            count = 0
 
-    keys = pygame.key.get_pressed()
-    if keys[pygame.K_a] or keys[pygame.K_LEFT]:
-        player.rect.x -= (MOVEMENT_SPEED)
-    if keys[pygame.K_d] or keys[pygame.K_RIGHT]:
-        player.rect.x += (MOVEMENT_SPEED)
-    # if keys[pygame.K_w] or keys[pygame.K_UP]:
-    #     player.rect.y -= (MOVEMENT_SPEED)
-    # if keys[pygame.K_s] or keys[pygame.K_DOWN]:
-    #     player.rect.y += (MOVEMENT_SPEED)
-    if keys[pygame.K_SPACE]:
-        bullet = shoot(player_x=player.rect.x, player_y=player.rect.y)
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_a] or keys[pygame.K_LEFT]:
+            player.rect.x -= (MOVEMENT_SPEED)
+        if keys[pygame.K_d] or keys[pygame.K_RIGHT]:
+            player.rect.x += (MOVEMENT_SPEED)
+        if keys[pygame.K_w] or keys[pygame.K_UP]:
+            player.rect.y -= (MOVEMENT_SPEED)
+        if keys[pygame.K_s] or keys[pygame.K_DOWN]:
+            player.rect.y += (MOVEMENT_SPEED)
+        if keys[pygame.K_SPACE]:
+            bullet = shoot(player_x=player.rect.x, player_y=player.rect.y)
 
-    if player_shot:
-        player_reload -= 1
-        if player_reload == 0:
-            player_shot = False
-    if enemy_shot:
-        enemy_reload -= 1
-        if enemy_reload == 0:
-            enemy_shot = False
-    if len(enemies_list) > 0:
-        random_num = random.randint(1, 10)
-        if random_num == 1:
-            random_enemy = random.choice(enemies_list)
-            shoot_enemy(random_enemy.rect.x, random_enemy.rect.y)
+        if player_shot:
+            player_reload -= 1
+            if player_reload == 0:
+                player_shot = False
+        if enemy_shot:
+            enemy_reload -= 1
+            if enemy_reload == 0:
+                enemy_shot = False
+        if len(enemies_list) > 0:
+            random_num = random.randint(1, 10)
+            if random_num == 1:
+                random_enemy = random.choice(enemies_list)
+                shoot_enemy(random_enemy.rect.x, random_enemy.rect.y)
 
-    scoreboard_text = f'Score: {score}'
-    scoreboard = GAME_FONT.render(scoreboard_text, True, 'white')
-    score_text_width, score_text_height = GAME_FONT.size(scoreboard_text)
-    screen.blit(scoreboard, (0, (SCREEN_HEIGHT - score_text_height)))
-    lives_text = f'lives: {lives}'
-    lives_render = GAME_FONT.render(lives_text, True, 'white')
-    lives_text_width, lives_text_height = GAME_FONT.size(lives_text)
-    screen.blit(lives_render, ((screen.width - (lives_text_width + 10),
-                (SCREEN_HEIGHT - lives_text_height))))
+        scoreboard_text = f'Score: {score}'
+        scoreboard = GAME_FONT.render(scoreboard_text, True, 'white')
+        score_text_width, score_text_height = GAME_FONT.size(scoreboard_text)
+        screen.blit(scoreboard, (0, (SCREEN_HEIGHT - score_text_height)))
+        lives_text = f'lives: {lives}'
+        lives_render = GAME_FONT.render(lives_text, True, 'white')
+        lives_text_width, lives_text_height = GAME_FONT.size(lives_text)
+        screen.blit(lives_render, ((screen.width - (lives_text_width + 10),
+                    (SCREEN_HEIGHT - lives_text_height))))
 
-    # collisions
-    check_collisions()
+        # collisions
+        check_collisions()
+
+        count += 1
+    if lives <= 0 or game_state == 'GAME OVER':
+        game_over()
     pygame.display.update()
-    count += 1
-
-
 pygame.quit()
