@@ -15,7 +15,7 @@ https://alphawaves.itch.io/shmup-graphics-pack?download
 ## Installation
 - Clone repository, create virtual environment and install dependencies:
 ```bash
-git clone https://github.com/wnsnk/space-invaders/
+git clone https://github.com/wnsnk/space-invaders.git
 cd space-invaders
 python3 -m venv .venv
 source .venv/bin/activate
